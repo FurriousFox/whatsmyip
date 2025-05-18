@@ -6,9 +6,7 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
 const http = require('node:http');
-
-const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+const net = require('net'); // Add this line
 
 const server = http.createServer((req, res) => {
     // eww, we don't do favicons, that's for noobs
@@ -39,19 +37,13 @@ const server = http.createServer((req, res) => {
         remote_ip = req.headers['x-cluster-client-ip'];
     }
 
-    if (!ipv4Regex.test(remote_ip) && !ipv6Regex.test(remote_ip)) {
+    let classify = net.isIP(remote_ip);
+    if (classify === 0) {
         res.writeHead(400, { "content-type": "text/plain; charset=UTF-8" });
         res.end("Invalid IP address\n");
         return;
     }
-
-
-    // is_ipv6
-    let is_ipv6 = false;
-    if (remote_ip.includes(":")) {
-        is_ipv6 = true;
-    }
-
+    let is_ipv6 = classify === 6;
     // is_browser
     let is_browser = false;
     if (req.headers['user-agent']) {
@@ -84,7 +76,7 @@ const server = http.createServer((req, res) => {
             return;
         }
 
-        if (!ipv4Regex.test(old_remote_ip) && !ipv6Regex.test(old_remote_ip)) {
+        if (net.isIP(old_remote_ip) === 0) {
             res.writeHead(200 /* 400 */, {
                 "content-type": "text/plain; charset=UTF-8",
                 "content-disposition": `inline; filename="ips.txt"`,
