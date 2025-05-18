@@ -5,7 +5,7 @@ process.on("unhandledRejection", (reason, promise) => {
     console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
-const http = require('http');
+const http = require('node:http');
 
 const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
@@ -55,14 +55,14 @@ const server = http.createServer((req, res) => {
     // is_browser
     let is_browser = false;
     if (req.headers['user-agent']) {
-        if (req.headers['user-agent'].toLowerCase().includes("chrome")) is_browser = true;
-        if (req.headers['user-agent'].toLowerCase().includes("firefox")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("chrome/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("firefox/")) is_browser = true;
         if (req.headers['user-agent'].toLowerCase().includes("edg/")) is_browser = true;
-        if (req.headers['user-agent'].toLowerCase().includes("msie")) is_browser = true;
-        if (req.headers['user-agent'].toLowerCase().includes("trident")) is_browser = true;
-        if (req.headers['user-agent'].toLowerCase().includes("safari")) is_browser = true;
-        if (req.headers['user-agent'].toLowerCase().includes("brave")) is_browser = true;
-        if (req.headers['user-agent'].toLowerCase().includes("mozilla")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("msie ")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("trident/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("safari/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("brave/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("mozilla/")) is_browser = true;
         if (req.headers['user-agent'].toLowerCase().includes("applewebkit")) is_browser = true;
         if (req.headers['user-agent'].toLowerCase().includes("gecko/")) is_browser = true;
     }
@@ -76,13 +76,19 @@ const server = http.createServer((req, res) => {
         if (req.url.length > 3) {
             old_remote_ip = decodeURIComponent(req.url.substring(3));
         } else {
-            res.writeHead(200 /* 400 */, { "content-type": "text/plain; charset=UTF-8" });
+            res.writeHead(200 /* 400 */, {
+                "content-type": "text/plain; charset=UTF-8",
+                "content-disposition": `inline; filename="ips.txt"`,
+            });
             res.end(`${remote_ip}\n`);
             return;
         }
 
         if (!ipv4Regex.test(old_remote_ip) && !ipv6Regex.test(old_remote_ip)) {
-            res.writeHead(200 /* 400 */, { "content-type": "text/plain; charset=UTF-8" });
+            res.writeHead(200 /* 400 */, {
+                "content-type": "text/plain; charset=UTF-8",
+                "content-disposition": `inline; filename="ips.txt"`,
+            });
             res.end(`${remote_ip}\n`);
             return;
         }
@@ -92,7 +98,10 @@ const server = http.createServer((req, res) => {
             res.end(`${remote_ip}\n`);
             return;
         } else {
-            res.writeHead(200, { "content-type": "text/plain; charset=UTF-8" });
+            res.writeHead(200, {
+                "content-type": "text/plain; charset=UTF-8",
+                "content-disposition": `inline; filename="ips.txt"`,
+            });
             res.end(`${old_remote_ip}\n${remote_ip}\n`);
             return;
         }
@@ -112,9 +121,16 @@ const server = http.createServer((req, res) => {
         return;
     } else {
         if (is_ipv6) {
-            res.writeHead(302, { "content-type": "text/plain; charset=UTF-8", "location": `https://ipv4.argv.nl/r/${encodeURIComponent(remote_ip)}` });
+            res.writeHead(302, {
+                "content-type": "text/plain; charset=UTF-8",
+                "location": `https://ipv4.argv.nl/r/${encodeURIComponent(remote_ip)}`,
+                "content-disposition": `inline; filename="ips.txt"`,
+            });
         } else {
-            res.writeHead(200, { "content-type": "text/plain; charset=UTF-8" });
+            res.writeHead(200, {
+                "content-type": "text/plain; charset=UTF-8",
+                "content-disposition": `inline; filename="ips.txt"`,
+            });
         }
         res.end(`${remote_ip}\n`);
         return;
