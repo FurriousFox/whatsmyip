@@ -5,10 +5,11 @@
 ## Features
 
 - IPv4 **and** IPv6 support (like, seriously, not IPv4 *or* IPv6, but, both at once)
-- Browser and CLI support
-![browser support](browser.png)![cli support](cli.png)
-<sub><sup>(so sorry for the ones having these ips after me)</sup></sub>
-- No dependencies (except for the built-in `node:http` module)
+- Browser and CLI support  
+
+  <img src="https://raw.githubusercontent.com/FurriousFox/whatsmyip/refs/heads/main/browser.png" width="200" alt="browser support"><br>
+  <img src="https://raw.githubusercontent.com/FurriousFox/whatsmyip/refs/heads/main/cli.png" width="200" alt="cli support">  
+- No dependencies (except for the built-in `node:http` module)  
 <sub><sup>(apparently that's a feature, according to Copilot, it's nice that it isn't bloated with Express ig)</sup></sub>
 - Dark mode support
 - Viewport tag included (no need for squinting when on mobile)
