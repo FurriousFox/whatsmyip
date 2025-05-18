@@ -6,7 +6,7 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
 const http = require('node:http');
-const net = require('net'); // Add this line
+const net = require('node:net');
 
 const server = http.createServer((req, res) => {
     // eww, we don't do favicons, that's for noobs
@@ -37,13 +37,15 @@ const server = http.createServer((req, res) => {
         remote_ip = req.headers['x-cluster-client-ip'];
     }
 
-    let classify = net.isIP(remote_ip);
-    if (classify === 0) {
+    if (!net.isIP(remote_ip)) {
         res.writeHead(400, { "content-type": "text/plain; charset=UTF-8" });
         res.end("Invalid IP address\n");
         return;
     }
-    let is_ipv6 = classify === 6;
+
+    // is_ipv6
+    let is_ipv6 = net.isIPv6(remote_ip);
+
     // is_browser
     let is_browser = false;
     if (req.headers['user-agent']) {
@@ -76,7 +78,7 @@ const server = http.createServer((req, res) => {
             return;
         }
 
-        if (net.isIP(old_remote_ip) === 0) {
+        if (!net.isIP(old_remote_ip)) {
             res.writeHead(200 /* 400 */, {
                 "content-type": "text/plain; charset=UTF-8",
                 "content-disposition": `inline; filename="ips.txt"`,
