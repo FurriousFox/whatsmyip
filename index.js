@@ -48,6 +48,7 @@ const server = http.createServer((req, res) => {
 
     // is_browser
     let is_browser = false;
+    let is_fetch = false;
     if (req.headers['user-agent']) {
         if (req.headers['user-agent'].toLowerCase().includes("chrome/")) is_browser = true;
         if (req.headers['user-agent'].toLowerCase().includes("firefox/")) is_browser = true;
@@ -64,6 +65,8 @@ const server = http.createServer((req, res) => {
     if (req.headers['sec-fetch-mode']) if (req.headers['sec-fetch-mode'].toLowerCase() === "navigate") is_browser = true;
     if (req.headers['sec-fetch-site']) if (req.headers['sec-fetch-site'].toLowerCase() === "same-origin") is_browser = true;
     if (req.headers['sec-fetch-site']) if (req.headers['sec-fetch-site'].toLowerCase() === "cross-site") is_browser = true;
+
+    if (req.headers['sec-fetch-dest'] && req.headers['sec-fetch-dest'].toLowerCase() === "empty") is_fetch = true;
 
     if (req.url.startsWith("/r/")) {
         let old_remote_ip;
@@ -99,7 +102,7 @@ const server = http.createServer((req, res) => {
             res.end(`${old_remote_ip}\n${remote_ip}\n`);
             return;
         }
-    } else if (req.url.startsWith("/raw")) {
+    } else if (req.url.startsWith("/raw") || (is_browser && is_fetch)) {
         res.writeHead(200, {
             "content-type": "text/plain; charset=UTF-8",
             "Access-Control-Allow-Origin": "*",
