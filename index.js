@@ -60,6 +60,25 @@ const server = http.createServer((req, res) => {
         if (req.headers['user-agent'].toLowerCase().includes("mozilla/")) is_browser = true;
         if (req.headers['user-agent'].toLowerCase().includes("applewebkit")) is_browser = true;
         if (req.headers['user-agent'].toLowerCase().includes("gecko/")) is_browser = true;
+
+        // detect search engine crawlers (like google, bing, etc.) as browser
+        if (req.headers['user-agent'].toLowerCase().includes("googlebot/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("googlebot-")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("google-")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("bingbot/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("duckduckbot/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("slurp/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("yandex/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("baiduspider/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("ahrefsbot/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("semrushbot/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("dotbot/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("facebookexternalhit/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("twitterbot/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("linkedinbot/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("instagram/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("whatsapp/")) is_browser = true;
+        if (req.headers['user-agent'].toLowerCase().includes("telegrambot/")) is_browser = true;
     }
     if (req.headers['sec-fetch-dest']) if (req.headers['sec-fetch-dest'].toLowerCase() === "document") is_browser = true;
     if (req.headers['sec-fetch-mode']) if (req.headers['sec-fetch-mode'].toLowerCase() === "navigate") is_browser = true;
@@ -68,7 +87,28 @@ const server = http.createServer((req, res) => {
 
     if (req.headers['sec-fetch-dest'] && req.headers['sec-fetch-dest'].toLowerCase() === "empty") is_fetch = true;
 
-    if (req.url.startsWith("/r/")) {
+    if (req.url == "/robots.txt") {
+        res.writeHead(200, { "content-type": "text/plain; charset=UTF-8" });
+        if (req.headers.host == "ip.argv.nl") {
+            res.end("User-agent: *\nAllow: /\nSitemap: https://ip.argv.nl/sitemap.xml\n");
+        } else {
+            res.end("User-agent: *\nAllow: /\n");
+        }
+        return;
+    } else if (req.url == "/sitemap.xml") {
+        if (req.headers.host == "ip.argv.nl") {
+            res.writeHead(200, { "content-type": "application/xml; charset=UTF-8" });
+            res.end(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://ip.argv.nl/</loc></url></urlset>`);
+        } else {
+            res.writeHead(404, { "content-type": "text/plain; charset=UTF-8" });
+            res.end("Not Found\n");
+        }
+        return;
+    } else if (req.url == "/favicon.ico") {
+        res.writeHead(404, { "content-type": "image/x-icon" });
+        res.end();
+        return;
+    } else if (req.url.startsWith("/r/")) {
         let old_remote_ip;
         if (req.url.length > 3) {
             old_remote_ip = decodeURIComponent(req.url.substring(3));
@@ -107,14 +147,24 @@ const server = http.createServer((req, res) => {
             "content-type": "text/plain; charset=UTF-8",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Origin, Content-Type, Accept, Authorization"
+            "Access-Control-Allow-Headers": "Origin, Content-Type, Accept, Authorization",
+
+            "cache-control": "no-cache, no-store, must-revalidate, max-age=0",
+            "pragma": "no-cache",
+            "expires": "0",
         });
         res.end(`${remote_ip}`);
         return;
     } else if (is_browser) {
-        res.writeHead(200, { "content-type": "text/html; charset=UTF-8" });
+        res.writeHead(200, {
+            "content-type": "text/html; charset=UTF-8",
+            "link": `<https://ipv${is_ipv6 ? "4" : "6"}.argv.nl>; rel="preconnect"`,
+            "cache-control": "no-cache, no-store, must-revalidate, max-age=0",
+            "pragma": "no-cache",
+            "expires": "0",
+        });
         // browser page fetching the other ip variant, supporting phone layout, dark mode, easy ip selection and a beatiful font :)
-        res.end(`<meta name="viewport" content="width=device-width, initial-scale=1.0" /> <style>\n* { font-family: monospace; unicode-bidi: isolate; }\nbody { margin-top: 13px; }\n @media (prefers-color-scheme: dark) { \n body { background-color: #121212; color: #e0e0e0; } \n pre { color: #e0e0e0; } \n }\n</style> <script> function select(el) { if (window.getSelection().toString() !== "") return; let range = document.createRange(); range.selectNodeContents(el); let sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); } </script> <div id="ips"> <pre onclick="select(this)">${remote_ip}</pre> </div> <script> (async ()=>{ let ip; if (ip = (await (await fetch('https://ipv${is_ipv6 ? "4" : "6"}.argv.nl/raw')).text())) { let ipre = document.createElement('pre'); ipre.setAttribute('onclick', 'select(this)'); ipre.innerText = ip; document.getElementById('ips').appendChild(ipre); }})() </script>`);
+        res.end(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="darkreader-lock" /><meta name="darkreader" content="disable" /><link rel="preconnect" href="https://ipv${is_ipv6 ? "4" : "6"}.argv.nl" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="${remote_ip}" /><title>${remote_ip}</title><meta property="og:title" content="${remote_ip}" /><meta property="og:url" content="https://ip.argv.nl" /></head> <body><style>\n* { font-family: monospace; unicode-bidi: isolate; }\nbody { margin-top: 13px; }\n @media (prefers-color-scheme: dark) { \n body { background-color: #121212; color: #e0e0e0; } \n pre { color: #e0e0e0; } \n }\n</style> <script> function select(el) { if (window.getSelection().toString() !== "") return; let range = document.createRange(); range.selectNodeContents(el); let sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); } </script> <div id="ips"> <pre onclick="select(this)">${remote_ip}</pre> </div> <script> (async ()=>{ let ip; if (ip = (await (await fetch('https://ipv${is_ipv6 ? "4" : "6"}.argv.nl/raw')).text())) { let ipre = document.createElement('pre'); ipre.setAttribute('onclick', 'select(this)'); ipre.innerText = ip; document.getElementById('ips').appendChild(ipre); document.title += \` \${ip}\`; document.querySelector('meta[name="description"]').content += \` \${ip}\`; document.querySelector('meta[property="og:title"]').content += \` \${ip}\`; }})() </script></body></html>`);
         return;
     } else {
         if (is_ipv6) {
