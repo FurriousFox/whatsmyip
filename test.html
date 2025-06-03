@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Page</title>
+</head>
+
+<body>
+    <style>
+        * {
+            font-family: monospace;
+            unicode-bidi: isolate;
+        }
+
+        body {
+            margin-top: 13px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #121212;
+                color: #e0e0e0;
+            }
+
+            pre {
+                color: #e0e0e0;
+            }
+        }
+    </style>
+    <script>
+        function select(el) {
+            if (window.getSelection().toString() !== "") return;
+            let range = document.createRange();
+            range.selectNodeContents(el);
+            let sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    </script>
+    <div id="ips">
+        <pre onclick="select(this)">${remote_ip}</pre>
+    </div>
+    <script>
+        (async () => {
+            let ip;
+            if (ip = (await (await fetch('https://ipv${is_ipv6 ? "4" : "6"}.argv.nl/raw')).text())) {
+                let ipre = document.createElement('pre');
+                ipre.setAttribute('onclick', 'select(this)');
+                ipre.innerText = ip;
+                document.getElementById('ips').appendChild(ipre);
+            }
+        })()
+    </script>
+</body>
+
+</html>
