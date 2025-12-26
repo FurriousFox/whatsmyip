@@ -88,7 +88,7 @@ const server = http.createServer((req, res) => {
     if (req.headers['sec-fetch-dest'] && req.headers['sec-fetch-dest'].toLowerCase() === "empty") is_fetch = true;
 
     if (req.url == "/robots.txt") {
-        res.writeHead(200, { "content-type": "text/plain; charset=UTF-8" });
+        res.writeHead(200, { "content-type": "text/plain; charset=UTF-8", "X-Robots-Tag": "noindex" });
         if (req.headers.host == "ip.argv.nl") {
             res.end("User-agent: *\nAllow: /\nSitemap: https://ip.argv.nl/sitemap.xml\n");
         } else {
@@ -97,10 +97,10 @@ const server = http.createServer((req, res) => {
         return;
     } else if (req.url == "/sitemap.xml") {
         if (req.headers.host == "ip.argv.nl") {
-            res.writeHead(200, { "content-type": "application/xml; charset=UTF-8" });
+            res.writeHead(200, { "content-type": "application/xml; charset=UTF-8", "X-Robots-Tag": "noindex" });
             res.end(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://ip.argv.nl/</loc></url></urlset>`);
         } else {
-            res.writeHead(404, { "content-type": "text/plain; charset=UTF-8" });
+            res.writeHead(404, { "content-type": "text/plain; charset=UTF-8", "X-Robots-Tag": "noindex" });
             res.end("Not Found\n");
         }
         return;
@@ -156,6 +156,15 @@ const server = http.createServer((req, res) => {
         res.end(`${remote_ip}`);
         return;
     } else if (is_browser) {
+        // http --> https
+        if (req.headers?.["x-forwarded-proto"] == "http") {
+            res.writeHead(302, {
+                "location": `https://${req.headers.host}${req.url}`,
+            });
+            res.end();
+            return;
+        }
+
         res.writeHead(200, {
             "content-type": "text/html; charset=UTF-8",
             "link": `<https://ipv${is_ipv6 ? "4" : "6"}.argv.nl>; rel="preconnect"`,
